@@ -43,7 +43,11 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-
+        print("URL:", url)
+        await message.answer(
+            f"🎵 {artist} - {title}\n{url}"
+        )
+        print("MESSAGE SENT")
         builder.button(
             text="Открыть на Genius",
             url=song["url"]
