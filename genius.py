@@ -1,7 +1,57 @@
 import aiohttp
 import os
+import re
 
 GENIUS_TOKEN = os.getenv("GENIUS_TOKEN")
+
+
+def normalize(text: str) -> str:
+    text = text.lower()
+
+    # удаляем скобки
+    text = re.sub(r"\(.*?\)", "", text)
+    text = re.sub(r"\[.*?\]", "", text)
+
+    # убираем лишние пробелы
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+
+def relevance_score(query: str, artist: str, title: str) -> int:
+
+    query = query.lower()
+    artist_l = artist.lower()
+    title_l = title.lower()
+
+    score = 0
+
+    # точное совпадение названия
+    if query == title_l:
+        score += 100
+
+    # запрос входит в название
+    if query in title_l:
+        score += 50
+
+    # запрос входит в исполнителя
+    if query in artist_l:
+        score += 20
+
+    # штрафы за менее желательные версии
+    bad_words = [
+        "remix",
+        "live",
+        "karaoke",
+        "instrumental",
+        "acoustic"
+    ]
+
+    for word in bad_words:
+        if word in title_l:
+            score -= 15
+
+    return score
 
 
 async def search_song(query: str):
@@ -12,7 +62,7 @@ async def search_song(query: str):
         "Authorization": f"Bearer {GENIUS_TOKEN}"
     }
 
-    results = []
+    raw_results = []
 
     async with aiohttp.ClientSession() as session:
 
@@ -28,14 +78,11 @@ async def search_song(query: str):
             ) as response:
 
                 if response.status != 200:
-                    print(f"Genius API error: {response.status}")
                     break
 
                 data = await response.json()
 
                 hits = data["response"]["hits"]
-
-                print(f"PAGE {page} | HITS: {len(hits)}")
 
                 if not hits:
                     break
@@ -44,13 +91,39 @@ async def search_song(query: str):
 
                     song = hit["result"]
 
-                    results.append({
+                    raw_results.append({
                         "title": song["title"],
                         "artist": song["primary_artist"]["name"],
                         "url": song["url"],
                         "id": song["id"]
                     })
 
-        print("TOTAL RESULTS:", len(results))
+    # Удаление дублей
+    unique = {}
+    
+    for song in raw_results:
 
-        return results
+        key = (
+            normalize(song["artist"]),
+            normalize(song["title"])
+        )
+
+        if key not in unique:
+            unique[key] = song
+
+    results = list(unique.values())
+
+    # Сортировка по релевантности
+    results.sort(
+        key=lambda song: relevance_score(
+            query,
+            song["artist"],
+            song["title"]
+        ),
+        reverse=True
+    )
+
+    print(f"RAW: {len(raw_results)}")
+    print(f"UNIQUE: {len(results)}")
+
+    return results
