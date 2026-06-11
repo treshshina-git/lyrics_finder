@@ -57,14 +57,48 @@ async def find_song(message: Message):
 
     search_cache[message.from_user.id] = songs
 
-    builder = InlineKeyboardBuilder()
 
-    for index, song in enumerate(songs[:10]):
-        builder.button(
-            text=f"{index + 1}. {song['artist']} - {song['title'][:25]}",
-            callback_data=f"song_{index}"
-        )
-
+    def build_page(songs, page=0, per_page=5):
+        builder = InlineKeyboardBuilder()
+        start = page * per_page
+        end = start + per_page
+        page_songs = songs[start:end]
+        for index, song in enumerate(page_songs, start=start):
+            builder.button(
+                text=f"{song['artist']} - {song['title'][:25]}",
+                callback_data=f"song_{index}"
+            )
+            nav = []
+            if page > 0:
+                nav.append({
+                    "text": "⬅️",
+                    "data": f"page_{page-1}"
+                })
+                nav.append({
+                    "text": f"{page+1}/{(len(songs)-1)//per_page+1}",
+                    "data": "noop"
+                })
+                if end < len(songs):
+                    nav.append({
+                        "text": "➡️",
+                        "data": f"page_{page+1}"
+                    })
+                    for item in nav:
+                        builder.button(
+                            text=item["text"],
+                            callback_data=item["data"]
+                        )
+                    builder.adjust(1)
+                if len(nav):
+                    builder.adjust(
+                        *([1] * len(page_songs)),
+                        len(nav)
+                    )
+            return builder
+            builder = build_page(
+                songs,
+                page=0
+            )
     builder.adjust(1)
 
     await message.answer(
@@ -127,43 +161,6 @@ async def select_song(callback: CallbackQuery):
     for part in split_text(lyrics):
         await callback.message.answer(part)
     
-    def build_page(songs, page=0, per_page=5):
-        builder = InlineKeyboardBuilder()
-        start = page * per_page
-        end = start + per_page
-        page_songs = songs[start:end]
-        for index, song in enumerate(page_songs, start=start):
-            builder.button(
-                text=f"{song['artist']} - {song['title'][:25]}",
-                callback_data=f"song_{index}"
-            )
-            nav = []
-            if page > 0:
-                nav.append({
-                    "text": "⬅️",
-                    "data": f"page_{page-1}"
-                })
-                nav.append({
-                    "text": f"{page+1}/{(len(songs)-1)//per_page+1}",
-                    "data": "noop"
-                })
-                if end < len(songs):
-                    nav.append({
-                        "text": "➡️",
-                        "data": f"page_{page+1}"
-                    })
-                    for item in nav:
-                        builder.button(
-                            text=item["text"],
-                            callback_data=item["data"]
-                        )
-                    builder.adjust(1)
-                if len(nav):
-                    builder.adjust(
-                        *([1] * len(page_songs)),
-                        len(nav)
-                    )
-            return builder
 
 async def main():
     await dp.start_polling(bot)
