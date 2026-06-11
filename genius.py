@@ -95,7 +95,13 @@ async def search_song(query: str):
                         "title": song["title"],
                         "artist": song["primary_artist"]["name"],
                         "url": song["url"],
-                        "id": song["id"]
+                        "id": song["id"],
+                        "score": relevance_score(
+                            query,
+                            song["primary_artist"]["name"],
+                            song["title"]
+                        ),
+                        "views": song.get("stats", {}).get("pageviews", 0)
                     })
 
     # Удаление дублей
@@ -115,14 +121,12 @@ async def search_song(query: str):
 
     # Сортировка по релевантности
     results.sort(
-        key=lambda song: relevance_score(
-            query,
-            song["artist"],
-            song["title"]
+        key=lambda song: (
+            song["score"],
+            song["views"]
         ),
         reverse=True
     )
-
     print(f"RAW: {len(raw_results)}")
     print(f"UNIQUE: {len(results)}")
 
