@@ -54,7 +54,6 @@ async def find_song(message: Message):
             "❌ Ничего не найдено"
         )
         return
-
     search_cache[message.from_user.id] = songs
     await message.answer(
         "🎵 Выберите песню:",
