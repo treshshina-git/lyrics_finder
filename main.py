@@ -30,8 +30,10 @@ def build_page(songs, page=0, per_page=5):
     page_songs = songs[start:end]
 
     for index, song in enumerate(page_songs, start=start):
-        builder.button(text=f"{song['artist']} - {song['title'][:25]}",
-                       callback_data=f"song_{index}")
+        builder.button(
+            text=f"{song['artist']} - {song['title'][:25]}",
+            callback_data=f"song_{index}"
+        )
 
     total_pages = (len(songs) - 1) // per_page + 1
 
@@ -46,7 +48,10 @@ def build_page(songs, page=0, per_page=5):
         nav.append(("➡️", f"page_{page + 1}"))
 
     for text, data in nav:
-        builder.button(text=text, callback_data=data)
+        builder.button(
+            text=text,
+            callback_data=data
+        )
 
     builder.adjust(*([1] * len(page_songs)), len(nav))
 
@@ -66,18 +71,23 @@ async def find_song(message: Message):
     if len(query) > 200:
         await message.answer("Слишком длинный запрос.")
         return
-        await message.answer("🔍 Ищу песню...")
 
+    await message.answer("🔍 Ищу песню...")
 
-        if not songs:
-            await message.answer("❌ Ничего не найдено")
-        return
     songs = await search_song(query)
+
+    if not songs:
+        await message.answer("❌ Ничего не найдено")
+        return
+
     search_cache[message.from_user.id] = songs
 
     builder = build_page(songs, page=0)
 
-    await message.answer("🎵 Выберите песню:", reply_markup=builder.as_markup())
+    await message.answer(
+        "🎵 Выберите песню:",
+        reply_markup=builder.as_markup()
+    )
 
 
 @dp.callback_query(F.data == "noop")
@@ -98,7 +108,9 @@ async def page_change(callback: CallbackQuery):
 
     builder = build_page(songs, page=page)
 
-    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
+    await callback.message.edit_reply_markup(
+        reply_markup=builder.as_markup()
+    )
 
     await callback.answer()
 
@@ -122,17 +134,23 @@ async def select_song(callback: CallbackQuery):
 
     await callback.answer()
 
-    await callback.message.answer(f"🔍 Получаю текст:\n{artist} - {title}")
+    await callback.message.answer(
+        f"🔍 Получаю текст:\n{artist} - {title}"
+    )
 
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        await callback.message.answer(f"🎵 {artist} - {title}\n\n"
-                                      f"Текст не найден в LRCLIB.\n\n"
-                                      f"🔗 {url}")
+        await callback.message.answer(
+            f"🎵 {artist} - {title}\n\n"
+            f"Текст не найден в LRCLIB.\n\n"
+            f"🔗 {url}"
+        )
         return
 
-    await callback.message.answer(f"🎵 {artist} - {title}")
+    await callback.message.answer(
+        f"🎵 {artist} - {title}"
+    )
 
     for part in split_text(lyrics):
         await callback.message.answer(part)
