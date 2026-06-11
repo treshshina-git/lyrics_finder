@@ -35,7 +35,7 @@ async def search_song(query: str):
 
             results = []
 
-            for hit in hits[:10]:
+            for hit in hits[:45]:
 
                 song = hit["result"]
 
