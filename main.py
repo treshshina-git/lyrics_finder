@@ -1,3 +1,6 @@
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import CallbackQuery
+from aiogram import F
 from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
@@ -9,7 +12,7 @@ from genius import search_song
 from lrclib_api import get_lyrics
 from utils import split_text
 import re
-
+search_cache = {}
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -34,16 +37,25 @@ async def find_song(message: Message):
         return
 
     status = await message.answer("🔍 Ищу песню...")
-
-    song = await search_song(query)
-    print(song)
-    if not song:
-        await status.edit_text("❌ Песня не найдена.")
+    songs = await search_song(query)
+    if not songs:
+        await message.answer(
+            "❌ Ничего не найдено"
+        )
         return
-    artist = song["artist"]
-    title = song["title"]
-
-    lyrics = await get_lyrics(artist, title)
+        search_cache[message.from_user.id] = songs
+        builder = InlineKeyboardBuilder()
+        for index, song in enumerate(songs[:10]):
+            builder.button(
+                text=f"{index+1}. {song['title'][:40]}",
+                callback_data=f"song_{index}"
+            )
+            builder.adjust(1)
+            await message.answer(
+                "🎵 Выберите песню:",
+                reply_markup=builder.as_markup()
+            )
+            lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
         await message.answer(f"🎵 {artist} - {title}\n\n"
