@@ -19,20 +19,13 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
 
-
-
-
 @dp.message(CommandStart())
 async def start(message: Message):
-
     await message.answer("🎵 Отправьте название песни или строку из песни.")
-
 
 @dp.message()
 async def find_song(message: Message):
-
     query = message.text.strip()
-
     if len(query) > 200:
         await message.answer("Слишком длинный запрос.")
         return
@@ -50,8 +43,7 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        await message.answer(f"🎵 {artist} - {title}",
-                             reply_markup=keyboard)
+        await message.answer(f"🎵 {artist} - {title}", reply_markup=keyboard)
         return
         await status.edit_text(f"✅ Найдено:\n"
                                f"{song['artist']} - {song['title']}")
