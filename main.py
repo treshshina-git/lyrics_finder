@@ -46,10 +46,12 @@ async def find_song(message: Message):
             "❌ Песня не найдена."
         )
         return
+    artist = song["artist"]
+    title = song["title"]
 
     lyrics = await get_lyrics(
-        song["artist"],
-        song["title"]
+        artist,
+        title
     )
     
     if not lyrics:
