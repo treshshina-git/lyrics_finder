@@ -33,19 +33,30 @@ async def search_song(query: str):
             if not hits:
                 return []
 
-            results = []
+        results = []
 
-            for hit in hits[:45]:
+        for page in range(1, 6):
+            async with session.get(
+                url,
+                headers=headers,
+                params={
+                    "q": query,
+                    "page": page
+                }
+            ) as response:
+                data = await response.json()
+                hits = data["response"]["hits"]
+                if not hits:
+                    break
+                    for hit in hits:
+                        song = hit["result"]
 
-                song = hit["result"]
-
-                results.append({
-                    "title": song["title"],
-                    "artist": song["primary_artist"]["name"],
-                    "url": song["url"],
-                    "id": song["id"]
-                })
-
+            results.append({
+                "title": song["title"],
+                "artist": song["primary_artist"]["name"],
+                "url": song["url"],
+                "id": song["id"]
+            })
             print(
                 f"Found {len(results)} songs"
             )
