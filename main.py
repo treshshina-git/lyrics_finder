@@ -158,7 +158,8 @@ async def select_song(callback: CallbackQuery):
         return
 
     await callback.message.answer(
-        f"🎵 {artist} - {title}"
+        f"🎵 {artist} - {title}\n"
+        f"👁 Просмотров на Genius: {song.get('views', 0):,}"
     )
 
     for part in split_text(lyrics):
