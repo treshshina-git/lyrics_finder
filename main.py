@@ -59,23 +59,22 @@ async def find_song(message: Message):
            f"Открыть Genius:\n{url}"
         )
         return
-
-    await status.edit_text(
-        f"✅ Найдено:\n"
-        f"{song['artist']} - {song['title']}"
-    )
-
-    def clean_title(title):
-        title = re.sub(r"\(.*?\)", "", title)
-        title = re.sub(r"\[.*?\]", "", title)
-    return title.strip()
-
-
-    def clean_artist(artist):
-        artist = re.sub(r"\(.*?\)", "", artist)
+        await status.edit_text(
+            f"✅ Найдено:\n"
+            f"{song['artist']} - {song['title']}"
+        )
+        
+        def clean_title(title):
+            title = re.sub(r"\(.*?\)", "", title)
+            title = re.sub(r"\[.*?\]", "", title)
+            return title.strip()
+            
+        def clean_artist(artist):
+            artist = re.sub(r"\(.*?\)", "", artist)
         return artist.strip()
+        
         for part in split_text(lyrics):
-        await message.answer(part)
+            await message.answer(part)
 
 async def main():
     await dp.start_polling(bot)
