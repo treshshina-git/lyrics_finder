@@ -68,12 +68,12 @@ async def find_song(message: Message):
         return
 
     await message.answer("🔍 Ищу песню...")
-    songs = await search_song(query)
+
 
     if not songs:
         await message.answer("❌ Ничего не найдено")
         return
-
+    songs = await search_song(query)
     search_cache[message.from_user.id] = songs
 
     builder = build_page(songs, page=0)
