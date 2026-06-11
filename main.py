@@ -56,12 +56,6 @@ async def find_song(message: Message):
         return
 
     search_cache[message.from_user.id] = songs
-    builder = build_page(
-        songs,
-        page=0
-    )
-    builder.adjust(1)
-
     await message.answer(
         "🎵 Выберите песню:",
         reply_markup=builder.as_markup()
