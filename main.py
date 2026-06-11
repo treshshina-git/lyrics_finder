@@ -12,6 +12,7 @@ from genius import search_song
 from lrclib_api import get_lyrics
 from utils import split_text
 import re
+
 search_cache = {}
 load_dotenv()
 
@@ -39,22 +40,16 @@ async def find_song(message: Message):
     status = await message.answer("🔍 Ищу песню...")
     songs = await search_song(query)
     if not songs:
-        await message.answer(
-            "❌ Ничего не найдено"
-        )
+        await message.answer("❌ Ничего не найдено")
         return
         search_cache[message.from_user.id] = songs
         builder = InlineKeyboardBuilder()
         for index, song in enumerate(songs[:10]):
-            builder.button(
-                text=f"{index+1}. {song['title'][:40]}",
-                callback_data=f"song_{index}"
-            )
+            builder.button(text=f"{index+1}. {song['title'][:40]}",
+                           callback_data=f"song_{index}")
             builder.adjust(1)
-            await message.answer(
-                "🎵 Выберите песню:",
-                reply_markup=builder.as_markup()
-            )
+            await message.answer("🎵 Выберите песню:",
+                                 reply_markup=builder.as_markup())
             lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
@@ -78,25 +73,16 @@ async def find_song(message: Message):
         for part in split_text(lyrics):
             await message.answer(part)
 
+
 @dp.callback_query(F.data.startswith("song_"))
 async def select_song(callback: CallbackQuery):
 
-    index = int(
-        callback.data.replace(
-            "song_",
-            ""
-        )
-    )
+    index = int(callback.data.replace("song_", ""))
 
-    songs = search_cache.get(
-        callback.from_user.id
-    )
+    songs = search_cache.get(callback.from_user.id)
 
     if not songs:
-        await callback.answer(
-            "Поиск устарел",
-            show_alert=True
-        )
+        await callback.answer("Поиск устарел", show_alert=True)
         return
 
     song = songs[index]
@@ -105,27 +91,22 @@ async def select_song(callback: CallbackQuery):
     title = song["title"]
     url = song["url"]
 
-    lyrics = await get_lyrics(
-        artist,
-        title
-    )
+    lyrics = await get_lyrics(artist, title)
 
     await callback.answer()
 
     if not lyrics:
 
-        await callback.message.answer(
-            f"🎵 {artist} - {title}\n\n"
-            f"🔗 {url}"
-        )
+        await callback.message.answer(f"🎵 {artist} - {title}\n\n"
+                                      f"🔗 {url}")
         return
 
-    await callback.message.answer(
-        f"🎵 {artist} - {title}"
-    )
+    await callback.message.answer(f"🎵 {artist} - {title}")
 
     for part in split_text(lyrics):
         await callback.message.answer(part)
+
+
 async def main():
     await dp.start_polling(bot)
 
