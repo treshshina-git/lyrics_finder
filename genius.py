@@ -25,19 +25,14 @@ async def search_song(query: str):
 
             if not hits:
                 return []
-
+                
             results = []
-
             for hit in hits[:10]:
-
                 song = hit["result"]
-
                 results.append({
                     "title": song["title"],
                     "artist": song["primary_artist"]["name"],
-                    "url": song["url"],
-                    "id": song["id"]
+                    "url": song["url"]
                 })
-
-            return results
+                return results
 
