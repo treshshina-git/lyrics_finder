@@ -49,5 +49,7 @@ async def search_song(query: str):
             print(
                 f"Found {len(results)} songs"
             )
+            print("HITS:", len(hits))
+            print("RESULTS:", len(results))
 
             return results
