@@ -94,6 +94,38 @@ async def page_change(callback: CallbackQuery):
 @dp.callback_query(F.data == "noop")
 async def noop(callback: CallbackQuery):
     await callback.answer()
+
+@dp.callback_query(F.data.startswith("page_"))
+async def page_change(callback: CallbackQuery):
+
+    page = int(
+        callback.data.replace(
+            "page_",
+            ""
+        )
+    )
+
+    songs = search_cache.get(
+        callback.from_user.id
+    )
+
+    if not songs:
+        await callback.answer(
+            "Поиск устарел",
+            show_alert=True
+        )
+        return
+
+    builder = build_page(
+        songs,
+        page=page
+    )
+
+    await callback.message.edit_reply_markup(
+        reply_markup=builder.as_markup()
+    )
+
+    await callback.answer()
 @dp.callback_query(F.data.startswith("song_"))
 async def select_song(callback: CallbackQuery):
 
