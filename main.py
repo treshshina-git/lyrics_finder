@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import asyncio
 import os
 from genius import search_song
-from genius_api import search_song
 from lrclib_api import get_lyrics
 from utils import split_text
 
