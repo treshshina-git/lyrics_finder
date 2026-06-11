@@ -52,12 +52,12 @@ async def find_song(message: Message):
         song["title"]
     )
 
-    if not lyrics:
-
-        await status.edit_text(
-            f"🎵 {song['artist']} - {song['title']}\n\n"
-            "Текст песни не найден."
-        )
+   if not lyrics:
+    await message.answer(
+        f"🎵 {artist} - {title}\n\n"
+        f"Текст не найден в LRCLIB.\n"
+        f"Открыть Genius:\n{url}"
+    )
         return
 
     await status.edit_text(
