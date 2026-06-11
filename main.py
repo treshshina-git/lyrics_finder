@@ -17,7 +17,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
-
+builder = InlineKeyboardBuilder()
 @dp.message(CommandStart())
 async def start(message: Message):
     await message.answer("🎵 Отправьте название песни или строку из песни.")
@@ -43,7 +43,7 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        builder = InlineKeyboardBuilder()
+
         builder.button(
             text="Открыть на Genius",
             url=song["url"]
