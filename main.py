@@ -30,8 +30,17 @@ def build_page(songs, page=0, per_page=5):
     page_songs = songs[start:end]
 
     for index, song in enumerate(page_songs, start=start):
+        views = song.get("views", 0)
+
+        if views >= 1_000_000:
+            views_text = f"{views // 1_000_000}M"
+        elif views >= 1_000:
+            views_text = f"{views // 1_000}K"
+        else:
+            views_text = str(views)
+
         builder.button(
-            text=f"{song['artist']} - {song['title'][:25]}",
+            text=f"🎵 {song['title'][:20]} | 👁 {views_text}",
             callback_data=f"song_{index}"
         )
 
