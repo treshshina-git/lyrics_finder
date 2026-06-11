@@ -40,7 +40,7 @@ def build_page(songs, page=0, per_page=5):
             views_text = str(views)
 
         builder.button(
-            text=f"🎵 {song['title'][:20]} | 👁 {views_text}",
+            text=f"🎵 {song['artist'][:20]} - {song['title'][:20]} | 👁 {views_text}",
             callback_data=f"song_{index}"
         )
 
