@@ -61,7 +61,7 @@ async def find_song(message: Message):
 
     for index, song in enumerate(songs[:10]):
         builder.button(
-            text=f"{index + 1}. {song['artist']} - {song['title'][:40]}",
+            text=f"{index + 1}. {song['artist']} - {song['title'][:25]}",
             callback_data=f"song_{index}"
         )
 
