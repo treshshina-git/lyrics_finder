@@ -43,7 +43,7 @@ async def find_song(message: Message):
     )
 
     song = await search_song(query)
-
+    print(song)
     if not song:
         await status.edit_text(
             "❌ Песня не найдена."
