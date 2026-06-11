@@ -34,6 +34,16 @@ async def find_song(message: Message):
 
     song = await search_song(query)
     print(song)
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Открыть на Genius",
+                    url=url
+                )
+            ]
+        ]
+    )
     if not song:
         await status.edit_text("❌ Песня не найдена.")
         return
