@@ -66,8 +66,7 @@ async def find_song(message: Message):
     if len(query) > 200:
         await message.answer("Слишком длинный запрос.")
         return
-
-    await message.answer("🔍 Ищу песню...")
+        await message.answer("🔍 Ищу песню...")
 
 
     if not songs:
