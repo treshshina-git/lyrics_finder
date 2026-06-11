@@ -39,11 +39,11 @@ async def find_song(message: Message):
         return
     artist = song["artist"]
     title = song["title"]
-
+    url = song["url"]
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        print("URL:", song["url"])
+        print("URL:", url)
         await message.answer(
             f"🎵 {artist} - {title}\n{url}"
         )
