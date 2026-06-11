@@ -75,11 +75,10 @@ async def find_song(message: Message):
         return
 
     await message.answer("🔍 Ищу песню...")
-
-    songs = await search_song(query)
-
-    print(songs)
-    print(len(songs))
+    
+songs = await search_song(query)
+print(songs)
+print(len(songs))
 
     if not songs:
         await message.answer("❌ Ничего не найдено")
