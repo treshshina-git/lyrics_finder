@@ -1,10 +1,7 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import CallbackQuery
-from aiogram import F
-from aiogram import Bot
-from aiogram import Dispatcher
+from aiogram.types import CallbackQuery, Message
+from aiogram import F, Bot, Dispatcher
 from aiogram.filters import CommandStart
-from aiogram.types import Message
 from dotenv import load_dotenv
 
 import asyncio
@@ -23,187 +20,174 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
 
+
 def build_page(songs, page=0, per_page=5):
+    builder = InlineKeyboardBuilder()
 
-```
-builder = InlineKeyboardBuilder()
+    start = page * per_page
+    end = start + per_page
 
-start = page * per_page
-end = start + per_page
+    page_songs = songs[start:end]
 
-page_songs = songs[start:end]
+    for index, song in enumerate(page_songs, start=start):
+        builder.button(
+            text=f"{song['artist']} - {song['title'][:25]}",
+            callback_data=f"song_{index}"
+        )
 
-for index, song in enumerate(page_songs, start=start):
-    builder.button(
-        text=f"{song['artist']} - {song['title'][:25]}",
-        callback_data=f"song_{index}"
-    )
+    total_pages = (len(songs) - 1) // per_page + 1
 
-nav = []
+    nav = []
 
-if page > 0:
-    nav.append(("⬅️", f"page_{page-1}"))
+    if page > 0:
+        nav.append(("⬅️", f"page_{page - 1}"))
 
-total_pages = (len(songs) - 1) // per_page + 1
+    nav.append((f"{page + 1}/{total_pages}", "noop"))
 
-nav.append((f"{page+1}/{total_pages}", "noop"))
+    if end < len(songs):
+        nav.append(("➡️", f"page_{page + 1}"))
 
-if end < len(songs):
-    nav.append(("➡️", f"page_{page+1}"))
+    for text, data in nav:
+        builder.button(
+            text=text,
+            callback_data=data
+        )
 
-for text, data in nav:
-    builder.button(
-        text=text,
-        callback_data=data
-    )
+    builder.adjust(*([1] * len(page_songs)), len(nav))
 
-builder.adjust(*([1] * len(page_songs)), len(nav))
+    return builder
 
-return builder
-```
 
 @dp.message(CommandStart())
 async def start(message: Message):
-await message.answer(
-"🎵 Отправьте название песни или строку из песни."
-)
+    await message.answer(
+        "🎵 Отправьте название песни или строку из песни."
+    )
+
 
 @dp.message()
 async def find_song(message: Message):
 
-```
-query = message.text.strip()
+    query = message.text.strip()
 
-if len(query) > 200:
+    if len(query) > 200:
+        await message.answer("Слишком длинный запрос.")
+        return
+
+    await message.answer("🔍 Ищу песню...")
+
+    songs = await search_song(query)
+
+    print(songs)
+    print(len(songs))
+
+    if not songs:
+        await message.answer("❌ Ничего не найдено")
+        return
+
+    search_cache[message.from_user.id] = songs
+
+    builder = build_page(songs, page=0)
+
     await message.answer(
-        "Слишком длинный запрос."
+        "🎵 Выберите песню:",
+        reply_markup=builder.as_markup()
     )
-    return
 
-await message.answer(
-    "🔍 Ищу песню..."
-)
-
-songs = await search_song(query)
-
-print(songs)
-print(len(songs))
-
-if not songs:
-    await message.answer(
-        "❌ Ничего не найдено"
-    )
-    return
-
-search_cache[message.from_user.id] = songs
-
-builder = build_page(
-    songs,
-    page=0
-)
-
-await message.answer(
-    "🎵 Выберите песню:",
-    reply_markup=builder.as_markup()
-)
-```
 
 @dp.callback_query(F.data == "noop")
 async def noop(callback: CallbackQuery):
-await callback.answer()
+    await callback.answer()
+
 
 @dp.callback_query(F.data.startswith("page_"))
 async def page_change(callback: CallbackQuery):
 
-```
-page = int(
-    callback.data.replace(
-        "page_",
-        ""
+    page = int(
+        callback.data.replace(
+            "page_",
+            ""
+        )
     )
-)
 
-songs = search_cache.get(
-    callback.from_user.id
-)
+    songs = search_cache.get(callback.from_user.id)
 
-if not songs:
-    await callback.answer(
-        "Поиск устарел",
-        show_alert=True
+    if not songs:
+        await callback.answer(
+            "Поиск устарел",
+            show_alert=True
+        )
+        return
+
+    builder = build_page(
+        songs,
+        page=page
     )
-    return
 
-builder = build_page(
-    songs,
-    page=page
-)
+    await callback.message.edit_reply_markup(
+        reply_markup=builder.as_markup()
+    )
 
-await callback.message.edit_reply_markup(
-    reply_markup=builder.as_markup()
-)
+    await callback.answer()
 
-await callback.answer()
-```
 
 @dp.callback_query(F.data.startswith("song_"))
 async def select_song(callback: CallbackQuery):
 
-```
-index = int(
-    callback.data.replace(
-        "song_",
-        ""
+    index = int(
+        callback.data.replace(
+            "song_",
+            ""
+        )
     )
-)
 
-songs = search_cache.get(
-    callback.from_user.id
-)
-
-if not songs:
-    await callback.answer(
-        "Поиск устарел",
-        show_alert=True
+    songs = search_cache.get(
+        callback.from_user.id
     )
-    return
 
-song = songs[index]
+    if not songs:
+        await callback.answer(
+            "Поиск устарел",
+            show_alert=True
+        )
+        return
 
-artist = song["artist"]
-title = song["title"]
-url = song["url"]
+    song = songs[index]
 
-await callback.answer()
+    artist = song["artist"]
+    title = song["title"]
+    url = song["url"]
 
-await callback.message.answer(
-    f"🔍 Получаю текст:\n"
-    f"{artist} - {title}"
-)
+    await callback.answer()
 
-lyrics = await get_lyrics(
-    artist,
-    title
-)
-
-if not lyrics:
     await callback.message.answer(
-        f"🎵 {artist} - {title}\n\n"
-        f"Текст не найден в LRCLIB.\n\n"
-        f"🔗 {url}"
+        f"🔍 Получаю текст:\n{artist} - {title}"
     )
-    return
 
-await callback.message.answer(
-    f"🎵 {artist} - {title}"
-)
+    lyrics = await get_lyrics(
+        artist,
+        title
+    )
 
-for part in split_text(lyrics):
-    await callback.message.answer(part)
-```
+    if not lyrics:
+        await callback.message.answer(
+            f"🎵 {artist} - {title}\n\n"
+            f"Текст не найден в LRCLIB.\n\n"
+            f"🔗 {url}"
+        )
+        return
+
+    await callback.message.answer(
+        f"🎵 {artist} - {title}"
+    )
+
+    for part in split_text(lyrics):
+        await callback.message.answer(part)
+
 
 async def main():
-await dp.start_polling(bot)
+    await dp.start_polling(bot)
 
-if **name** == "**main**":
-asyncio.run(main())
+
+if __name__ == "__main__":
+    asyncio.run(main())
