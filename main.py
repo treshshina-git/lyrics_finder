@@ -39,13 +39,14 @@ async def find_song(message: Message):
         return
     artist = song["artist"]
     title = song["title"]
-    url = song["url"]
+
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
+        url = song["url"]
         print("URL:", url)
         await message.answer(
-            f"🎵 {artist} - {title}\n{url}"
+            f"🎵 {artist} - {title} - {url}"
         )
         print("MESSAGE SENT")
         builder.button(
