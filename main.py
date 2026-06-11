@@ -2,13 +2,13 @@ from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-
 from dotenv import load_dotenv
-
 import asyncio
 import os
-
 from genius import search_song
+from genius_api import search_song
+from lrclib_api import get_lyrics
+from utils import split_text
 
 load_dotenv()
 
@@ -20,34 +20,57 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def start(message: Message):
+
     await message.answer(
-        "Отправь фрагмент текста песни 🎵"
+        "🎵 Отправьте название песни или строку из песни."
     )
+
+
 
 
 @dp.message()
-async def lyrics_search(message: Message):
+async def find_song(message: Message):
 
-    query = message.text
+    query = message.text.strip()
 
-    await message.answer(
-        "🔎 Ищу..."
-    )
-
-    result = await search_song(query)
-
-    if not result:
+    if len(query) > 200:
         await message.answer(
-            "Ничего не найдено"
+            "Слишком длинный запрос."
         )
         return
 
-    text = (
-        f"🎵 {result['artist']} - {result['title']}\n\n"
-        f"{result['url']}"
+    status = await message.answer(
+        "🔍 Ищу песню..."
     )
 
-    await message.answer(text)
+    song = await search_song(query)
+
+    if not song:
+        await status.edit_text(
+            "❌ Песня не найдена."
+        )
+        return
+
+    lyrics = await get_lyrics(
+        song["artist"],
+        song["title"]
+    )
+
+    if not lyrics:
+
+        await status.edit_text(
+            f"🎵 {song['artist']} - {song['title']}\n\n"
+            "Текст песни не найден."
+        )
+        return
+
+    await status.edit_text(
+        f"✅ Найдено:\n"
+        f"{song['artist']} - {song['title']}"
+    )
+
+    for part in split_text(lyrics):
+        await message.answer(part)
 
 
 async def main():
