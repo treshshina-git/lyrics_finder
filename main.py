@@ -78,7 +78,54 @@ async def find_song(message: Message):
         for part in split_text(lyrics):
             await message.answer(part)
 
+@dp.callback_query(F.data.startswith("song_"))
+async def select_song(callback: CallbackQuery):
 
+    index = int(
+        callback.data.replace(
+            "song_",
+            ""
+        )
+    )
+
+    songs = search_cache.get(
+        callback.from_user.id
+    )
+
+    if not songs:
+        await callback.answer(
+            "Поиск устарел",
+            show_alert=True
+        )
+        return
+
+    song = songs[index]
+
+    artist = song["artist"]
+    title = song["title"]
+    url = song["url"]
+
+    lyrics = await get_lyrics(
+        artist,
+        title
+    )
+
+    await callback.answer()
+
+    if not lyrics:
+
+        await callback.message.answer(
+            f"🎵 {artist} - {title}\n\n"
+            f"🔗 {url}"
+        )
+        return
+
+    await callback.message.answer(
+        f"🎵 {artist} - {title}"
+    )
+
+    for part in split_text(lyrics):
+        await callback.message.answer(part)
 async def main():
     await dp.start_polling(bot)
 
