@@ -12,30 +12,12 @@ async def search_song(query: str):
         "Authorization": f"Bearer {GENIUS_TOKEN}"
     }
 
+    results = []
+
     async with aiohttp.ClientSession() as session:
 
-        async with session.get(
-            url,
-            headers=headers,
-            params={"q": query}
-        ) as response:
-
-            if response.status != 200:
-                print(
-                    f"Genius API error: {response.status}"
-                )
-                return []
-
-            data = await response.json()
-
-            hits = data["response"]["hits"]
-
-            if not hits:
-                return []
-
-        results = []
-
         for page in range(1, 6):
+
             async with session.get(
                 url,
                 headers=headers,
@@ -44,23 +26,31 @@ async def search_song(query: str):
                     "page": page
                 }
             ) as response:
+
+                if response.status != 200:
+                    print(f"Genius API error: {response.status}")
+                    break
+
                 data = await response.json()
+
                 hits = data["response"]["hits"]
+
+                print(f"PAGE {page} | HITS: {len(hits)}")
+
                 if not hits:
                     break
-                    for hit in hits:
-                        song = hit["result"]
 
-            results.append({
-                "title": song["title"],
-                "artist": song["primary_artist"]["name"],
-                "url": song["url"],
-                "id": song["id"]
-            })
-            print(
-                f"Found {len(results)} songs"
-            )
-            print("HITS:", len(hits))
-            print("RESULTS:", len(results))
+                for hit in hits:
 
-            return results
+                    song = hit["result"]
+
+                    results.append({
+                        "title": song["title"],
+                        "artist": song["primary_artist"]["name"],
+                        "url": song["url"],
+                        "id": song["id"]
+                    })
+
+        print("TOTAL RESULTS:", len(results))
+
+        return results
