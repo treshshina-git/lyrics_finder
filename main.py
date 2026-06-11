@@ -56,49 +56,10 @@ async def find_song(message: Message):
         return
 
     search_cache[message.from_user.id] = songs
-
-
-    def build_page(songs, page=0, per_page=5):
-        builder = InlineKeyboardBuilder()
-        start = page * per_page
-        end = start + per_page
-        page_songs = songs[start:end]
-        for index, song in enumerate(page_songs, start=start):
-            builder.button(
-                text=f"{song['artist']} - {song['title'][:25]}",
-                callback_data=f"song_{index}"
-            )
-            nav = []
-            if page > 0:
-                nav.append({
-                    "text": "⬅️",
-                    "data": f"page_{page-1}"
-                })
-                nav.append({
-                    "text": f"{page+1}/{(len(songs)-1)//per_page+1}",
-                    "data": "noop"
-                })
-                if end < len(songs):
-                    nav.append({
-                        "text": "➡️",
-                        "data": f"page_{page+1}"
-                    })
-                    for item in nav:
-                        builder.button(
-                            text=item["text"],
-                            callback_data=item["data"]
-                        )
-                    builder.adjust(1)
-                if len(nav):
-                    builder.adjust(
-                        *([1] * len(page_songs)),
-                        len(nav)
-                    )
-            return builder
-            builder = build_page(
-                songs,
-                page=0
-            )
+    builder = build_page(
+        songs,
+        page=0
+    )
     builder.adjust(1)
 
     await message.answer(
@@ -106,7 +67,40 @@ async def find_song(message: Message):
         reply_markup=builder.as_markup()
     )
 
+@dp.callback_query(F.data.startswith("page_"))
+async def page_change(callback: CallbackQuery):
 
+    page = int(
+        callback.data.replace(
+            "page_",
+            ""
+        )
+    )
+
+    songs = search_cache.get(
+        callback.from_user.id
+    )
+
+    if not songs:
+        await callback.answer(
+            "Поиск устарел",
+            show_alert=True
+        )
+        return
+
+    builder = build_page(
+        songs,
+        page=page
+    )
+
+    await callback.message.edit_reply_markup(
+        reply_markup=builder.as_markup()
+    )
+
+    await callback.answer()
+@dp.callback_query(F.data == "noop")
+async def noop(callback: CallbackQuery):
+    await callback.answer()
 @dp.callback_query(F.data.startswith("song_"))
 async def select_song(callback: CallbackQuery):
 
