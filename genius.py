@@ -3,6 +3,7 @@ import os
 
 GENIUS_TOKEN = os.getenv("GENIUS_TOKEN")
 
+
 async def search_song(query: str):
 
     url = "https://api.genius.com/search"
@@ -19,21 +20,34 @@ async def search_song(query: str):
             params={"q": query}
         ) as response:
 
+            if response.status != 200:
+                print(
+                    f"Genius API error: {response.status}"
+                )
+                return []
+
             data = await response.json()
 
             hits = data["response"]["hits"]
 
             if not hits:
                 return []
-                
+
             results = []
+
             for hit in hits[:10]:
+
                 song = hit["result"]
+
                 results.append({
                     "title": song["title"],
                     "artist": song["primary_artist"]["name"],
-                    "url": song["url"]
+                    "url": song["url"],
+                    "id": song["id"]
                 })
-                print(results)
-                return results
 
+            print(
+                f"Found {len(results)} songs"
+            )
+
+            return results
