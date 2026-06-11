@@ -2,8 +2,7 @@ from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.types import InlineKeyboardMarkup
-from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from dotenv import load_dotenv
 import asyncio
 import os
@@ -44,17 +43,16 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        await message.answer(f"🎵 {artist} - {title}", reply_markup=keyboard)
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="Открыть на Genius",
-                        url=url
-                    )
-                ]
-            ]
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text="Открыть на Genius",
+            url=song["url"]
         )
+        await message.answer(
+            f"🎵 {artist} - {title}",
+            reply_markup=builder.as_markup()
+        )
+
         return
         await status.edit_text(f"✅ Найдено:\n"
                                f"{song['artist']} - {song['title']}")
