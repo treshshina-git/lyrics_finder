@@ -44,6 +44,7 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
+        await message.answer(f"🎵 {artist} - {title}", reply_markup=keyboard)
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -54,7 +55,6 @@ async def find_song(message: Message):
                 ]
             ]
         )
-        await message.answer(f"🎵 {artist} - {title}", reply_markup=keyboard)
         return
         await status.edit_text(f"✅ Найдено:\n"
                                f"{song['artist']} - {song['title']}")
