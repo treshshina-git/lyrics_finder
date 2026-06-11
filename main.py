@@ -8,6 +8,7 @@ import os
 from genius import search_song
 from lrclib_api import get_lyrics
 from utils import split_text
+import re
 
 load_dotenv()
 
@@ -16,16 +17,12 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
 
-
 @dp.message(CommandStart())
 async def start(message: Message):
 
     await message.answer(
         "🎵 Отправьте название песни или строку из песни."
     )
-
-
-
 
 @dp.message()
 async def find_song(message: Message):
@@ -68,9 +65,17 @@ async def find_song(message: Message):
         f"{song['artist']} - {song['title']}"
     )
 
-    for part in split_text(lyrics):
-        await message.answer(part)
+    def clean_title(title):
+        title = re.sub(r"\(.*?\)", "", title)
+        title = re.sub(r"\[.*?\]", "", title)
+    return title.strip()
 
+
+    def clean_artist(artist):
+        artist = re.sub(r"\(.*?\)", "", artist)
+        return artist.strip()
+        for part in split_text(lyrics):
+        await message.answer(part)
 
 async def main():
     await dp.start_polling(bot)
