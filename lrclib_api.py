@@ -3,33 +3,43 @@ import aiohttp
 
 async def get_lyrics(artist, title):
 
-    url = "https://lrclib.net/api/search"
-
-    params = {
-        "artist_name": artist,
-        "track_name": title
-    }
-
     async with aiohttp.ClientSession() as session:
 
+        # Поиск по названию
+        search_url = "https://lrclib.net/api/search"
+
         async with session.get(
-            url,
-            params=params
+            search_url,
+            params={
+                "track_name": title
+            }
         ) as response:
 
             if response.status != 200:
                 return None
 
-            data = await response.json()
+            songs = await response.json()
 
-            if not data:
-                return None
+        if not songs:
+            return None
 
-            song = data[0]
+        # Ищем максимально похожего исполнителя
+        for song in songs:
 
-            lyrics = (
-                song.get("plainLyrics")
-                or song.get("syncedLyrics")
+            song_artist = (
+                song.get("artistName", "")
+                .lower()
             )
 
-            return lyrics
+            if artist.lower() in song_artist:
+
+                return (
+                    song.get("plainLyrics")
+                    or song.get("syncedLyrics")
+                )
+
+        # Берём первый результат
+        return (
+            songs[0].get("plainLyrics")
+            or songs[0].get("syncedLyrics")
+        )
