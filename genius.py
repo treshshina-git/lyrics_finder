@@ -36,5 +36,6 @@ async def search_song(query: str):
 
             return {
                 "title": song["title"],
-                "artist": song["primary_artist"]["name"]
+                "artist": song["primary_artist"]["name"],
+                "url": song["url"]
             }
