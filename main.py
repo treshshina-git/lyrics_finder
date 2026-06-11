@@ -2,6 +2,8 @@ from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton
 from dotenv import load_dotenv
 import asyncio
 import os
@@ -16,6 +18,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
+
+
 
 
 @dp.message(CommandStart())
@@ -46,9 +50,8 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        await message.answer(f"🎵 {artist} - {title}\n\n"
-                             f"Текст не найден в LRCLIB.\n"
-                             f"Открыть Genius:\n{url}")
+        await message.answer(f"🎵 {artist} - {title}",
+                             reply_markup=keyboard)
         return
         await status.edit_text(f"✅ Найдено:\n"
                                f"{song['artist']} - {song['title']}")
@@ -66,6 +69,16 @@ async def find_song(message: Message):
         for part in split_text(lyrics):
             await message.answer(part)
 
+keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Открыть на Genius",
+                url=url
+            )
+        ]
+    ]
+)
 
 async def main():
     await dp.start_polling(bot)
