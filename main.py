@@ -2,7 +2,6 @@ from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from dotenv import load_dotenv
 import asyncio
 import os
@@ -17,14 +16,19 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(BOT_TOKEN)
 dp = Dispatcher()
-builder = InlineKeyboardBuilder()
+
+
 @dp.message(CommandStart())
 async def start(message: Message):
+
     await message.answer("🎵 Отправьте название песни или строку из песни.")
+
 
 @dp.message()
 async def find_song(message: Message):
+
     query = message.text.strip()
+
     if len(query) > 200:
         await message.answer("Слишком длинный запрос.")
         return
@@ -33,7 +37,6 @@ async def find_song(message: Message):
 
     song = await search_song(query)
     print(song)
-
     if not song:
         await status.edit_text("❌ Песня не найдена.")
         return
@@ -43,21 +46,9 @@ async def find_song(message: Message):
     lyrics = await get_lyrics(artist, title)
 
     if not lyrics:
-        url = song["url"]
-        print("URL:", url)
-        await message.answer(
-            f"🎵 {artist} - {title} - {url}"
-        )
-        print("MESSAGE SENT")
-        builder.button(
-            text="Открыть на Genius",
-            url=song["url"]
-        )
-        await message.answer(
-            f"🎵 {artist} - {title}",
-            reply_markup=builder.as_markup()
-        )
-
+        await message.answer(f"🎵 {artist} - {title}\n\n"
+                             f"Текст не найден в LRCLIB.\n"
+                             f"Открыть Genius:\n{url}")
         return
         await status.edit_text(f"✅ Найдено:\n"
                                f"{song['artist']} - {song['title']}")
@@ -74,6 +65,7 @@ async def find_song(message: Message):
 
         for part in split_text(lyrics):
             await message.answer(part)
+
 
 async def main():
     await dp.start_polling(bot)
